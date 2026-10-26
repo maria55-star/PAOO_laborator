@@ -1,3 +1,0 @@
-/mnt/d/UPT-AC/AN-IV/PAOO/lab_tema3/build/CMakeFiles/Tema3PAOO.dir
-/mnt/d/UPT-AC/AN-IV/PAOO/lab_tema3/build/CMakeFiles/edit_cache.dir
-/mnt/d/UPT-AC/AN-IV/PAOO/lab_tema3/build/CMakeFiles/rebuild_cache.dir
