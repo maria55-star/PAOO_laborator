@@ -1,0 +1,1 @@
+/usr/bin/c++ CMakeFiles/Tema3PAOO.dir/main.cpp.o -o Tema3PAOO 
