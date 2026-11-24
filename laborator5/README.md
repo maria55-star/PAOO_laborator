@@ -8,8 +8,9 @@ Aplicatia foloseste clasa `VectorDinamic` (vector alocat dinamic) pentru a demon
 
 * `operator=` care returneaza referinta la `*this` (Item 10).
 * Protectie la auto-atribuire si exception safety (Item 11).
-* Copierea tuturor partilor unui obiect, inclusiv partea din clasa de baza (Item 12).
-* Move assignment (`operator=(VectorDinamic&&)`), din C++11.
+* Copierea tuturor partilor unui obiect, inclusiv partea din clasa de baza, atat in `operator=`, cat si in copy constructor (Item 12).
+* O varianta gresita (`VectorEtichetatGresit`), pentru a vedea in output ce se intampla daca uit apelul la clasa de baza.
+* Move constructor si move assignment (`operator=(VectorDinamic&&)`), din C++11.
 * Mesaje de tip „proof of life" in constructori, operatori si destructor.
 
 ## Diferenta dintre constructor si atribuire
@@ -48,7 +49,7 @@ Varianta din proiect (ordine corecta):
 2. sterg vectorul vechi
 3. mut pointerul pe cel nou
 
-Asa merge si pentru `c = c`, si daca `new` esueaza, obiectul ramane intact. Mai exista doua variante: testul de identitate (`if (this == &alt)`) si copy-and-swap, dar ordinea corecta rezolva ambele probleme fara cod in plus.
+Asa merge si pentru `c = c` (in `main` datele raman intacte), si daca `new` esueaza, obiectul ramane intact. Mai exista doua variante: testul de identitate (`if (this == &alt)`) si copy-and-swap, dar ordinea corecta rezolva ambele probleme fara cod in plus.
 
 ## De ce copiem toate partile (Item 12)
 
@@ -65,9 +66,26 @@ VectorEtichetat& operator=(const VectorEtichetat& alt) {
 }
 ```
 
-Daca uit `VectorDinamic(alt)` sau `VectorDinamic::operator=(alt)`, compilatorul nu da eroare, dar se copiaza doar eticheta, iar partea din baza ramane neschimbata (sau se construieste cu valori implicite). Daca adaug un membru nou in clasa, trebuie sa actualizez ambele functii de copiere.
+In `main` sunt testate ambele: `y = x;` (operator=) si `VectorEtichetat z = x;` (copy constructor). In ambele cazuri se copiaza si vectorul, si eticheta.
 
-## Move assignment
+Daca adaug un membru nou in clasa, trebuie sa actualizez ambele functii de copiere.
+
+### Ce se intampla daca uit apelul la baza
+
+Clasa `VectorEtichetatGresit` are un `operator=` care nu apeleaza `VectorDinamic::operator=(alt)`:
+
+```cpp
+VectorEtichetatGresit& operator=(const VectorEtichetatGresit& alt) {
+    eticheta = alt.eticheta;   // lipseste apelul la baza
+    return *this;
+}
+```
+
+Compilatorul nu da nicio eroare, dar dupa `q = p;` se copiaza doar eticheta. In output apare `p: [ 0 ]` in loc de `p: [ 5 5 5 ]`, adica partea din `VectorDinamic` a ramas necopiata.
+
+La fel, daca in copy constructor uit `VectorDinamic(alt)` in lista de initializare, partea din baza este construita cu constructorul implicit, nu copiata.
+
+## Move constructor si move assignment
 
 ```cpp
 d = std::move(c);
@@ -79,8 +97,24 @@ d = std::move(c);
 | Aloca memorie noua | Da | Nu |
 | Sursa dupa operatie | Neschimbata | Goala (`nullptr`) |
 
-La move assignment, obiectul destinatie are deja memorie, deci o sterg intai cu `delete[]`, altfel ar fi memory leak. Apoi iau pointerul sursei si pun `nullptr` in sursa, ca destructorul ei sa nu stearga a doua oara aceeasi memorie. Functia e `noexcept`.
+La move assignment, obiectul destinatie are deja memorie, deci o sterg intai cu `delete[]`, altfel ar fi memory leak. Apoi iau pointerul sursei si pun `nullptr` in sursa, ca destructorul ei sa nu stearga a doua oara aceeasi memorie. Functiile sunt `noexcept`. In `main` se vede ca `c` ramane cu 0 elemente dupa mutare.
 
 ## Cum se ruleaza
 
-Se compileaza cu CMake (C++17) si se ruleaza executabilul `laborator5`. Mesajele din constructori, operatori si destructor arata in ce ordine se apeleaza functiile.
+Se compileaza cu un compilator C++17:
+
+```bash
+g++ -std=c++17 -Wall -o laborator5 main.cpp
+./laborator5
+```
+
+Sau cu CMake:
+
+```bash
+mkdir build
+cd build
+cmake ..
+cmake --build .
+```
+
+Mesajele din constructori, operatori si destructor arata in ce ordine se apeleaza functiile.
