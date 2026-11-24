@@ -1,5 +1,6 @@
 #include <iostream>
 #include <string>
+#include <utility>
 using namespace std;
 
 // Clasa simpla ca la tema 3: un vector alocat dinamic
@@ -110,6 +111,29 @@ public:
     }
 };
 
+// Varianta GRESITA, doar pentru demonstratie (Item 12):
+// operator= nu apeleaza operator= din baza, deci partea din
+// VectorDinamic NU se copiaza. Compilatorul nu da nicio eroare!
+class VectorEtichetatGresit : public VectorDinamic {
+private:
+    string eticheta;
+
+public:
+    VectorEtichetatGresit(int n, int val, string eticheta)
+        : VectorDinamic(n, val), eticheta(eticheta) {}
+
+    VectorEtichetatGresit& operator=(const VectorEtichetatGresit& alt) {
+        // lipseste: VectorDinamic::operator=(alt);
+        eticheta = alt.eticheta;
+        return *this;
+    }
+
+    void afiseaza() const {
+        cout << eticheta << ": ";
+        VectorDinamic::afiseaza();
+    }
+};
+
 int main() {
     cout << "--- Item 10: atribuire inlantuita ---\n";
     VectorDinamic a(3, 1), b(2, 2), c(4, 3);
@@ -131,6 +155,15 @@ int main() {
     VectorEtichetat x(3, 5, "x"), y(1, 0, "y");
     y = x;
     y.afiseaza();   // s-au copiat si vectorul, si eticheta
+
+    cout << "\n--- Item 12: copy constructor derivat ---\n";
+    VectorEtichetat z = x;
+    z.afiseaza();   // vectorul si eticheta au fost copiate si la constructie
+
+    cout << "\n--- Item 12: ce se intampla daca uitam baza ---\n";
+    VectorEtichetatGresit p(3, 5, "p"), q(1, 0, "q");
+    q = p;
+    q.afiseaza();   // eticheta e "p", dar vectorul a ramas [ 0 ], nu [ 5 5 5 ]
 
     cout << "\n--- Sfarsit program ---\n";
     return 0;
